@@ -1,24 +1,21 @@
-FROM golang AS builder
+# Етап побудови
+FROM golang:latest AS builder
 
 WORKDIR /app
 
-COPY go.mod .
+COPY go.mod . 
 COPY go.sum .
 
 RUN go mod download
 
-COPY cmd ./cmd
-COPY lib ./lib
-COPY templates ./templates
-COPY main.go .
+COPY . .
 
-RUN CGO_ENABLED=0 go build -o ./fizzbuzz
+RUN CGO_ENABLED=0 go build -o fizzbuzz
 
-FROM scratch
+# Етап розгортання
+FROM gcr.io/distroless/static-debian11
 
 COPY --from=builder /app/fizzbuzz /fizzbuzz
 COPY templates /templates
 
-EXPOSE 8080
-
-CMD ["/fizzbuzz", "serve"]
+CMD ["/fizzbuzz"]
