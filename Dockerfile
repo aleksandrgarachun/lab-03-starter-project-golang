@@ -1,11 +1,24 @@
-FROM golang
+FROM golang AS builder
 
 WORKDIR /app
 
-COPY . .
+COPY go.mod .
+COPY go.sum .
 
-RUN go build -o build/fizzbuzz
+RUN go mod download
+
+COPY cmd ./cmd
+COPY lib ./lib
+COPY templates ./templates
+COPY main.go .
+
+RUN CGO_ENABLED=0 go build -o ./fizzbuzz
+
+FROM scratch
+
+COPY --from=builder /app/fizzbuzz /fizzbuzz
+COPY templates /templates
 
 EXPOSE 8080
 
-CMD ["./build/fizzbuzz", "serve"]
+CMD ["/fizzbuzz", "serve"]
